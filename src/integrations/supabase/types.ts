@@ -14,7 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      custom_replies: {
+        Row: {
+          created_at: string
+          id: string
+          keyword: string
+          response: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          keyword: string
+          response: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          keyword?: string
+          response?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+          updated_at: string
+          user_id: string
+          variants: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          price: number
+          updated_at?: string
+          user_id: string
+          variants?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+          updated_at?: string
+          user_id?: string
+          variants?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          ai_limit: number
+          ai_requests_count: number
+          created_at: string
+          email: string
+          id: string
+          name: string
+          status: string
+          store_name: string
+          updated_at: string
+          user_id: string
+          whatsapp: string
+        }
+        Insert: {
+          ai_limit?: number
+          ai_requests_count?: number
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          status?: string
+          store_name: string
+          updated_at?: string
+          user_id: string
+          whatsapp: string
+        }
+        Update: {
+          ai_limit?: number
+          ai_requests_count?: number
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          status?: string
+          store_name?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
