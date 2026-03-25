@@ -213,6 +213,15 @@ const ProductManager = ({ userId }: Props) => {
                 <Input value={form.video_url} onChange={(e) => setForm({ ...form, video_url: e.target.value })} placeholder="YouTube link" />
               </div>
             </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Description (optional)</Label>
+              <textarea
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder="Describe your product..."
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[80px] resize-y"
+              />
+            </div>
             <Button onClick={handleSubmit} size="sm" disabled={uploading}>
               <Check className="w-4 h-4 mr-1" />
               {editId ? "Update" : "Add Product"}
