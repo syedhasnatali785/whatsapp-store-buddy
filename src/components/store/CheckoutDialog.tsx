@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Send } from "lucide-react";
+import { Send, Tag } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -19,7 +19,54 @@ interface Props {
 const CheckoutDialog = ({ open, onClose, storeUserId, storeName, whatsapp }: Props) => {
   const { items, totalPrice, clearCart } = useCart();
   const [form, setForm] = useState({ name: "", phone: "", address: "" });
+  const [couponCode, setCouponCode] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [couponApplied, setCouponApplied] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    const { data } = await supabase
+      .from("coupons")
+      .select("*")
+      .eq("user_id", storeUserId)
+      .eq("code", couponCode.trim().toUpperCase())
+      .eq("active", true)
+      .single();
+
+    if (!data) {
+      toast.error("Invalid or expired coupon");
+      return;
+    }
+
+    const coupon = data as any;
+    if (coupon.max_uses && coupon.used_count >= coupon.max_uses) {
+      toast.error("Coupon usage limit reached");
+      return;
+    }
+    if (coupon.min_order > totalPrice) {
+      toast.error(`Minimum order Rs ${coupon.min_order} required`);
+      return;
+    }
+
+    let disc = 0;
+    if (coupon.type === "percentage") {
+      disc = Math.round(totalPrice * (coupon.value / 100));
+    } else {
+      disc = Math.min(coupon.value, totalPrice);
+    }
+    setDiscount(disc);
+    setCouponApplied(coupon.id);
+    toast.success(`Coupon applied! Rs ${disc.toLocaleString()} off`);
+  };
+
+  const removeCoupon = () => {
+    setDiscount(0);
+    setCouponApplied("");
+    setCouponCode("");
+  };
+
+  const finalTotal = Math.max(0, totalPrice - discount);
 
   const handleCheckout = async () => {
     if (!form.name.trim() || !form.phone.trim()) {
@@ -37,18 +84,27 @@ const CheckoutDialog = ({ open, onClose, storeUserId, storeName, whatsapp }: Pro
         phone: form.phone.trim(),
         address: form.address.trim(),
         products: orderProducts as any,
-        total_price: totalPrice,
+        total_price: finalTotal,
         status: "pending",
       });
 
-      // Build WhatsApp message
+      // Increment coupon used_count
+      if (couponApplied) {
+        const { data: coupon } = await supabase.from("coupons").select("used_count").eq("id", couponApplied).single();
+        if (coupon) {
+          await supabase.from("coupons").update({ used_count: (coupon as any).used_count + 1 } as any).eq("id", couponApplied);
+        }
+      }
+
       const productList = items.map((i) => `• ${i.name} x${i.quantity} — Rs ${(i.price * i.quantity).toLocaleString()}`).join("\n");
+      const discountLine = discount > 0 ? `\nDiscount: -Rs ${discount.toLocaleString()}` : "";
       const msg = encodeURIComponent(
-        `Hi ${storeName}! I want to order:\n\n${productList}\n\nTotal: Rs ${totalPrice.toLocaleString()}\n\nName: ${form.name}\nPhone: ${form.phone}\nAddress: ${form.address}`
+        `Hi ${storeName}! I want to order:\n\n${productList}\n\nSubtotal: Rs ${totalPrice.toLocaleString()}${discountLine}\nTotal: Rs ${finalTotal.toLocaleString()}\n\nName: ${form.name}\nPhone: ${form.phone}\nAddress: ${form.address}`
       );
 
       clearCart();
       setForm({ name: "", phone: "", address: "" });
+      removeCoupon();
       onClose();
 
       window.open(`https://wa.me/${whatsapp}?text=${msg}`, "_blank");
@@ -73,10 +129,35 @@ const CheckoutDialog = ({ open, onClose, storeUserId, storeName, whatsapp }: Pro
                 <span className="font-medium">Rs {(i.price * i.quantity).toLocaleString()}</span>
               </div>
             ))}
+            {discount > 0 && (
+              <div className="flex justify-between text-primary">
+                <span>Discount ({couponCode.toUpperCase()})</span>
+                <span>-Rs {discount.toLocaleString()}</span>
+              </div>
+            )}
             <div className="border-t pt-1 mt-2 flex justify-between font-bold">
               <span>Total</span>
-              <span className="text-primary">Rs {totalPrice.toLocaleString()}</span>
+              <span className="text-primary">Rs {finalTotal.toLocaleString()}</span>
             </div>
+          </div>
+
+          {/* Coupon */}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+              <Input
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+                placeholder="Coupon code"
+                className="pl-8 text-sm"
+                disabled={!!couponApplied}
+              />
+            </div>
+            {couponApplied ? (
+              <Button variant="outline" size="sm" onClick={removeCoupon}>Remove</Button>
+            ) : (
+              <Button variant="outline" size="sm" onClick={applyCoupon}>Apply</Button>
+            )}
           </div>
 
           <div className="space-y-3">

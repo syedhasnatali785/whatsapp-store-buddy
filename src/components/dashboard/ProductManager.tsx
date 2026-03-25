@@ -26,7 +26,7 @@ const ProductManager = ({ userId }: Props) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", price: "", variants: "", image_url: "", stock_count: "", video_url: "" });
+  const [form, setForm] = useState({ name: "", price: "", variants: "", image_url: "", stock_count: "", video_url: "", description: "" });
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -39,7 +39,7 @@ const ProductManager = ({ userId }: Props) => {
   useEffect(() => { load(); }, [userId]);
 
   const resetForm = () => {
-    setForm({ name: "", price: "", variants: "", image_url: "", stock_count: "", video_url: "" });
+    setForm({ name: "", price: "", variants: "", image_url: "", stock_count: "", video_url: "", description: "" });
     setShowForm(false);
     setEditId(null);
     setImagePreview(null);
@@ -95,6 +95,7 @@ const ProductManager = ({ userId }: Props) => {
       image_url: form.image_url || null,
       stock_count: form.stock_count ? parseInt(form.stock_count) : null,
       video_url: form.video_url || null,
+      description: form.description || null,
     };
 
     if (editId) {
@@ -111,7 +112,7 @@ const ProductManager = ({ userId }: Props) => {
   };
 
   const handleEdit = (p: Product) => {
-    setForm({ name: p.name, price: p.price.toString(), variants: p.variants || "", image_url: p.image_url || "", stock_count: (p as any).stock_count?.toString() || "", video_url: (p as any).video_url || "" });
+    setForm({ name: p.name, price: p.price.toString(), variants: p.variants || "", image_url: p.image_url || "", stock_count: (p as any).stock_count?.toString() || "", video_url: (p as any).video_url || "", description: (p as any).description || "" });
     setEditId(p.id);
     setImagePreview(p.image_url || null);
     setShowForm(true);
@@ -211,6 +212,15 @@ const ProductManager = ({ userId }: Props) => {
                 <Label className="text-xs">Video URL (optional)</Label>
                 <Input value={form.video_url} onChange={(e) => setForm({ ...form, video_url: e.target.value })} placeholder="YouTube link" />
               </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Description (optional)</Label>
+              <textarea
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder="Describe your product..."
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[80px] resize-y"
+              />
             </div>
             <Button onClick={handleSubmit} size="sm" disabled={uploading}>
               <Check className="w-4 h-4 mr-1" />
