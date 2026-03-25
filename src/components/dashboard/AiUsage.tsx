@@ -47,7 +47,12 @@ const AiUsage = ({ userId }: Props) => {
         {isExhausted && (
           <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
             <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-            <p>You've reached your AI usage limit. To continue using AI, a monthly subscription is required. Your store will continue working without AI.</p>
+            <div>
+              <p>You've reached your AI usage limit. Your store will continue working without AI.</p>
+              <a href="https://wa.me/923428688311" target="_blank" rel="noopener noreferrer" className="inline-block mt-2 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity">
+                Upgrade via WhatsApp
+              </a>
+            </div>
           </div>
         )}
       </CardContent>

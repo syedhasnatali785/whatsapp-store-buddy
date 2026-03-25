@@ -202,6 +202,16 @@ const ProductManager = ({ userId }: Props) => {
               <Label className="text-xs">Variants (optional)</Label>
               <Input value={form.variants} onChange={(e) => setForm({ ...form, variants: e.target.value })} placeholder="Red, Blue, Large, Small" />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Stock Count (optional)</Label>
+                <Input type="number" value={form.stock_count} onChange={(e) => setForm({ ...form, stock_count: e.target.value })} placeholder="e.g. 50" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Video URL (optional)</Label>
+                <Input value={form.video_url} onChange={(e) => setForm({ ...form, video_url: e.target.value })} placeholder="YouTube link" />
+              </div>
+            </div>
             <Button onClick={handleSubmit} size="sm" disabled={uploading}>
               <Check className="w-4 h-4 mr-1" />
               {editId ? "Update" : "Add Product"}
