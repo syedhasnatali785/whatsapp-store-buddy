@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import StorePage from "./pages/StorePage";
+import ProductDetailPage from "./pages/ProductDetailPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/store/:storeName" element={<StorePage />} />
+          <Route path="/store/:storeName/product/:productId" element={<ProductDetailPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
