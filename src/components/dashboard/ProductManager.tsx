@@ -95,6 +95,7 @@ const ProductManager = ({ userId }: Props) => {
       image_url: form.image_url || null,
       stock_count: form.stock_count ? parseInt(form.stock_count) : null,
       video_url: form.video_url || null,
+      description: form.description || null,
     };
 
     if (editId) {
