@@ -26,7 +26,7 @@ const ProductManager = ({ userId }: Props) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", price: "", variants: "", image_url: "" });
+  const [form, setForm] = useState({ name: "", price: "", variants: "", image_url: "", stock_count: "", video_url: "" });
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -39,7 +39,7 @@ const ProductManager = ({ userId }: Props) => {
   useEffect(() => { load(); }, [userId]);
 
   const resetForm = () => {
-    setForm({ name: "", price: "", variants: "", image_url: "" });
+    setForm({ name: "", price: "", variants: "", image_url: "", stock_count: "", video_url: "" });
     setShowForm(false);
     setEditId(null);
     setImagePreview(null);
@@ -93,6 +93,8 @@ const ProductManager = ({ userId }: Props) => {
       price: parseFloat(form.price),
       variants: form.variants || null,
       image_url: form.image_url || null,
+      stock_count: form.stock_count ? parseInt(form.stock_count) : null,
+      video_url: form.video_url || null,
     };
 
     if (editId) {
@@ -109,7 +111,7 @@ const ProductManager = ({ userId }: Props) => {
   };
 
   const handleEdit = (p: Product) => {
-    setForm({ name: p.name, price: p.price.toString(), variants: p.variants || "", image_url: p.image_url || "" });
+    setForm({ name: p.name, price: p.price.toString(), variants: p.variants || "", image_url: p.image_url || "", stock_count: (p as any).stock_count?.toString() || "", video_url: (p as any).video_url || "" });
     setEditId(p.id);
     setImagePreview(p.image_url || null);
     setShowForm(true);
@@ -199,6 +201,16 @@ const ProductManager = ({ userId }: Props) => {
             <div className="space-y-1">
               <Label className="text-xs">Variants (optional)</Label>
               <Input value={form.variants} onChange={(e) => setForm({ ...form, variants: e.target.value })} placeholder="Red, Blue, Large, Small" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Stock Count (optional)</Label>
+                <Input type="number" value={form.stock_count} onChange={(e) => setForm({ ...form, stock_count: e.target.value })} placeholder="e.g. 50" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Video URL (optional)</Label>
+                <Input value={form.video_url} onChange={(e) => setForm({ ...form, video_url: e.target.value })} placeholder="YouTube link" />
+              </div>
             </div>
             <Button onClick={handleSubmit} size="sm" disabled={uploading}>
               <Check className="w-4 h-4 mr-1" />
