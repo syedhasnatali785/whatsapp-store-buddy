@@ -93,6 +93,8 @@ const ProductManager = ({ userId }: Props) => {
       price: parseFloat(form.price),
       variants: form.variants || null,
       image_url: form.image_url || null,
+      stock_count: form.stock_count ? parseInt(form.stock_count) : null,
+      video_url: form.video_url || null,
     };
 
     if (editId) {
