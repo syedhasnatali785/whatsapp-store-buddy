@@ -39,7 +39,7 @@ const ProductManager = ({ userId }: Props) => {
   useEffect(() => { load(); }, [userId]);
 
   const resetForm = () => {
-    setForm({ name: "", price: "", variants: "", image_url: "" });
+    setForm({ name: "", price: "", variants: "", image_url: "", stock_count: "", video_url: "" });
     setShowForm(false);
     setEditId(null);
     setImagePreview(null);
