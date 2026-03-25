@@ -38,6 +38,45 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          address: string
+          created_at: string
+          customer_name: string
+          id: string
+          phone: string
+          products: Json
+          status: string
+          total_price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string
+          created_at?: string
+          customer_name: string
+          id?: string
+          phone: string
+          products?: Json
+          status?: string
+          total_price?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          customer_name?: string
+          id?: string
+          phone?: string
+          products?: Json
+          status?: string
+          total_price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           created_at: string
@@ -45,9 +84,11 @@ export type Database = {
           image_url: string | null
           name: string
           price: number
+          stock_count: number | null
           updated_at: string
           user_id: string
           variants: string | null
+          video_url: string | null
         }
         Insert: {
           created_at?: string
@@ -55,9 +96,11 @@ export type Database = {
           image_url?: string | null
           name: string
           price: number
+          stock_count?: number | null
           updated_at?: string
           user_id: string
           variants?: string | null
+          video_url?: string | null
         }
         Update: {
           created_at?: string
@@ -65,9 +108,11 @@ export type Database = {
           image_url?: string | null
           name?: string
           price?: number
+          stock_count?: number | null
           updated_at?: string
           user_id?: string
           variants?: string | null
+          video_url?: string | null
         }
         Relationships: []
       }
