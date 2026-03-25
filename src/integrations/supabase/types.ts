@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      coupons: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          max_uses: number | null
+          min_order: number
+          type: string
+          used_count: number
+          user_id: string
+          value: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          min_order?: number
+          type?: string
+          used_count?: number
+          user_id: string
+          value?: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          min_order?: number
+          type?: string
+          used_count?: number
+          user_id?: string
+          value?: number
+        }
+        Relationships: []
+      }
       custom_replies: {
         Row: {
           created_at: string
@@ -80,6 +122,7 @@ export type Database = {
       products: {
         Row: {
           created_at: string
+          description: string | null
           id: string
           image_url: string | null
           name: string
@@ -92,6 +135,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          description?: string | null
           id?: string
           image_url?: string | null
           name: string
@@ -104,6 +148,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          description?: string | null
           id?: string
           image_url?: string | null
           name?: string
