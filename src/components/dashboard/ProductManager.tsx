@@ -112,7 +112,7 @@ const ProductManager = ({ userId }: Props) => {
   };
 
   const handleEdit = (p: Product) => {
-    setForm({ name: p.name, price: p.price.toString(), variants: p.variants || "", image_url: p.image_url || "", stock_count: (p as any).stock_count?.toString() || "", video_url: (p as any).video_url || "" });
+    setForm({ name: p.name, price: p.price.toString(), variants: p.variants || "", image_url: p.image_url || "", stock_count: (p as any).stock_count?.toString() || "", video_url: (p as any).video_url || "", description: (p as any).description || "" });
     setEditId(p.id);
     setImagePreview(p.image_url || null);
     setShowForm(true);
