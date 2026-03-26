@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useCart } from "./CartContext";
 import { supabase } from "@/integrations/supabase/client";
-import { generateProductSlug, generateProductUrl } from "@/utils/slugUtils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Send, Tag, Link as LinkIcon } from "lucide-react";
+import { Send, Tag } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -111,21 +110,16 @@ const CheckoutDialog = ({ open, onClose, storeUserId, storeName, whatsapp }: Pro
         }
       }
 
-      // Build WhatsApp message with professional product links (short slugs)
-      const productLinks = items
+      // Build WhatsApp message without links and with better formatting
+      const productList = items
         .map((product, idx) => {
-          const slug = generateProductSlug(product.name, product.id);
-          const baseUrl = window.location.origin;
-          const storeSlug = storeName.toLowerCase().replace(/\s+/g, "-");
-          const productUrl = `${baseUrl}/store/${storeSlug}/product/${slug}`;
-          
-          return `${idx + 1}. *${product.name}* x${product.quantity}\n   💲 Rs ${(product.price * product.quantity).toLocaleString()}\n   🔗 ${productUrl}`;
+          return `*${idx + 1}.* *${product.name}* (_x${product.quantity}_)\n   💲 _Rs ${(product.price * product.quantity).toLocaleString()}_`;
         })
         .join("\n\n");
 
-      const discountLine = discount > 0 ? `\n\n💰 *Discount Applied:* -Rs ${discount.toLocaleString()}` : "";
+      const discountLine = discount > 0 ? `\n💰 *Discount:* _-Rs ${discount.toLocaleString()}_` : "";
 
-      const orderMessage = `🛒 *Order Summary* 🛒\n\n${productLinks}\n\n━━━━━━━━━━━━━━━━━━\n*Subtotal:* Rs ${(totalPrice + discount).toLocaleString()}${discountLine}\n*Total:* Rs ${finalTotal.toLocaleString()}\n\n👤 *Customer Details:*\n📝 Name: ${form.name}\n📍 Address: ${form.address}\n\n✨ Click the links above to view products with images!\nWhatsApp will show automatic product previews.`;
+      const orderMessage = `🛒 *New Order Summary* 🛒\n\n📦 *Items:*\n${productList}\n\n━━━━━━━━━━━━━━━━━━\n📊 *Subtotal:* _Rs ${(totalPrice + discount).toLocaleString()}_${discountLine}\n🧾 *Total Amount:* *Rs ${finalTotal.toLocaleString()}*\n━━━━━━━━━━━━━━━━━━\n\n👤 *Customer Details:*\n📝 *Name:* _${form.name.trim()}_\n📞 *Phone:* _${form.phone.trim()}_\n📍 *Address:* _${form.address.trim()}_`;
 
       const encodedMessage = encodeURIComponent(orderMessage);
 
@@ -158,22 +152,17 @@ const CheckoutDialog = ({ open, onClose, storeUserId, storeName, whatsapp }: Pro
               <div key={i.id} className="flex justify-between">
                 <div className="flex-1">
                   <span className="font-medium">{i.name} x{i.quantity}</span>
-                  {i.image_url && (
-                    <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                      <LinkIcon className="w-3 h-3" /> Shareable link with preview
-                    </div>
-                  )}
                 </div>
                 <span className="font-medium">Rs {(i.price * i.quantity).toLocaleString()}</span>
               </div>
             ))}
             {discount > 0 && (
-              <div className="flex justify-between text-primary">
+              <div className="flex justify-between text-primary mt-2">
                 <span>Discount ({couponCode.toUpperCase()})</span>
                 <span>-Rs {discount.toLocaleString()}</span>
               </div>
             )}
-            <div className="border-t pt-1 mt-2 flex justify-between font-bold">
+            <div className="border-t pt-2 mt-2 flex justify-between font-bold">
               <span>Total</span>
               <span className="text-primary">Rs {finalTotal.toLocaleString()}</span>
             </div>
@@ -231,13 +220,8 @@ const CheckoutDialog = ({ open, onClose, storeUserId, storeName, whatsapp }: Pro
 
           <Button className="w-full rounded-full" onClick={handleCheckout} disabled={submitting || items.length === 0}>
             <Send className="w-4 h-4 mr-2" />
-            {submitting ? "Placing Order..." : "Send Order with Links"}
+            {submitting ? "Placing Order..." : "Send Order via WhatsApp"}
           </Button>
-
-          <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
-            <LinkIcon className="w-3 h-3" />
-            Short links with WhatsApp image previews
-          </p>
         </div>
       </DialogContent>
     </Dialog>
