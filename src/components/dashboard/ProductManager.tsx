@@ -40,8 +40,12 @@ const ProductManager = ({ userId }: Props) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
-    const { data } = await supabase.from("products").select("*").eq("user_id", userId).order("created_at", { ascending: false });
-    if (data) setProducts(data as Product[]);
+    const [prodsRes, catsRes] = await Promise.all([
+      supabase.from("products").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+      supabase.from("categories").select("*").eq("user_id", userId).order("created_at", { ascending: true }),
+    ]);
+    if (prodsRes.data) setProducts(prodsRes.data as Product[]);
+    if (catsRes.data) setCategories(catsRes.data as Category[]);
   };
 
   useEffect(() => { load(); }, [userId]);
