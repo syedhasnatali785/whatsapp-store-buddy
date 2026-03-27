@@ -15,8 +15,7 @@ export const generateProductSlug = (productName: string, productId: string): str
   const slug = productName
     .toLowerCase()
     .trim()
-    .replace(/[^
-\w\s-]/g, '')
+    .replace(/[^\w\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-');
 
