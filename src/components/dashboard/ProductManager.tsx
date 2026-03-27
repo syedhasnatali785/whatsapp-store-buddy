@@ -108,6 +108,7 @@ const ProductManager = ({ userId }: Props) => {
       stock_count: form.stock_count ? parseInt(form.stock_count) : null,
       video_url: form.video_url || null,
       description: form.description || null,
+      category_id: form.category_id || null,
     };
 
     if (editId) {
