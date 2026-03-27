@@ -212,9 +212,25 @@ const ProductManager = ({ userId }: Props) => {
                 <Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="2500" />
               </div>
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Variants (optional)</Label>
-              <Input value={form.variants} onChange={(e) => setForm({ ...form, variants: e.target.value })} placeholder="Red, Blue, Large, Small" />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Variants (optional)</Label>
+                <Input value={form.variants} onChange={(e) => setForm({ ...form, variants: e.target.value })} placeholder="Red, Blue, Large, Small" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Category (optional)</Label>
+                <Select value={form.category_id} onValueChange={(v) => setForm({ ...form, category_id: v === "none" ? "" : v })}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Category</SelectItem>
+                    {categories.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
