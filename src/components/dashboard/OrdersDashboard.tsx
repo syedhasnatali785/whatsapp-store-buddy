@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ClipboardList, Package, CheckCircle, Clock } from "lucide-react";
+import { ClipboardList, Package, CheckCircle, Clock, MessageSquare, Truck, XCircle, Send } from "lucide-react";
 
 interface Order {
   id: string;
@@ -19,6 +19,54 @@ interface Order {
 interface Props {
   userId: string;
 }
+
+const MESSAGE_TEMPLATES = {
+  confirm: {
+    label: "✅ Confirm",
+    icon: CheckCircle,
+    variant: "outline" as const,
+    template: `Assalam o Alaikum {name}, aapka order confirm ho gaya hai.\n\nProducts:\n{products}\n\nTotal: Rs {price}\nAddress: {address}\n\nShukriya! 🙏`,
+  },
+  dispatch: {
+    label: "📦 Dispatch",
+    icon: Package,
+    variant: "outline" as const,
+    template: `Assalam o Alaikum {name}, aapka order dispatch ho gaya hai! 🎉\n\nProducts:\n{products}\n\nTotal: Rs {price}\nAddress: {address}\n\nJald aapko mil jayega, InshaAllah!`,
+  },
+  delivery: {
+    label: "🚚 Delivery",
+    icon: Truck,
+    variant: "outline" as const,
+    template: `Assalam o Alaikum {name}, aapka order delivery ke liye nikal chuka hai! 🚚\n\nProducts:\n{products}\n\nTotal: Rs {price}\nAddress: {address}\n\nPlease apna phone on rakhein. Shukriya!`,
+  },
+  cancel: {
+    label: "❌ Cancel",
+    icon: XCircle,
+    variant: "outline" as const,
+    template: `Assalam o Alaikum {name}, maazrat ke saath aapka order cancel karna par raha hai.\n\nProducts:\n{products}\n\nTotal: Rs {price}\n\nAgar koi sawal ho toh zaroor poochein. Shukriya!`,
+  },
+};
+
+const normalizePhone = (phone: string): string => {
+  let cleaned = phone.replace(/[^0-9]/g, "");
+  if (cleaned.startsWith("0")) cleaned = "92" + cleaned.slice(1);
+  if (!cleaned.startsWith("92")) cleaned = "92" + cleaned;
+  return cleaned;
+};
+
+const openWhatsApp = (order: Order, templateKey: keyof typeof MESSAGE_TEMPLATES) => {
+  const { template } = MESSAGE_TEMPLATES[templateKey];
+  const productsText = order.products
+    .map((p) => `• ${p.name} x${p.quantity} — Rs ${(p.price * p.quantity).toLocaleString()}`)
+    .join("\n");
+  const message = template
+    .replace("{name}", order.customer_name)
+    .replace("{products}", productsText)
+    .replace("{price}", order.total_price.toLocaleString())
+    .replace("{address}", order.address || "N/A");
+  const phone = normalizePhone(order.phone);
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
+};
 
 const OrdersDashboard = ({ userId }: Props) => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -102,6 +150,25 @@ const OrdersDashboard = ({ userId }: Props) => {
                     {o.status === "pending" ? "Mark Completed" : "Mark Pending"}
                   </Button>
                 </div>
+
+                {/* WhatsApp Message Buttons */}
+                <div className="flex flex-wrap gap-1.5 pt-1 border-t">
+                  <span className="w-full text-[10px] text-muted-foreground flex items-center gap-1 mb-0.5">
+                    <Send className="w-3 h-3" /> Send WhatsApp Message:
+                  </span>
+                  {(Object.keys(MESSAGE_TEMPLATES) as (keyof typeof MESSAGE_TEMPLATES)[]).map((key) => (
+                    <Button
+                      key={key}
+                      variant="outline"
+                      size="sm"
+                      className="text-[10px] h-6 px-2"
+                      onClick={() => openWhatsApp(o, key)}
+                    >
+                      {MESSAGE_TEMPLATES[key].label}
+                    </Button>
+                  ))}
+                </div>
+
                 <p className="text-[10px] text-muted-foreground">{new Date(o.created_at).toLocaleString()}</p>
               </div>
             ))}
