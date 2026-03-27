@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Edit2, Package, X, Check, Upload, Image, Loader2 } from "lucide-react";
 
 interface Product {
@@ -13,6 +14,12 @@ interface Product {
   price: number;
   variants: string | null;
   image_url: string | null;
+  category_id: string | null;
+}
+
+interface Category {
+  id: string;
+  name: string;
 }
 
 interface Props {
@@ -24,22 +31,27 @@ const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const ProductManager = ({ userId }: Props) => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", price: "", variants: "", image_url: "", stock_count: "", video_url: "", description: "" });
+  const [form, setForm] = useState({ name: "", price: "", variants: "", image_url: "", stock_count: "", video_url: "", description: "", category_id: "" });
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
-    const { data } = await supabase.from("products").select("*").eq("user_id", userId).order("created_at", { ascending: false });
-    if (data) setProducts(data as Product[]);
+    const [prodsRes, catsRes] = await Promise.all([
+      supabase.from("products").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+      supabase.from("categories").select("*").eq("user_id", userId).order("created_at", { ascending: true }),
+    ]);
+    if (prodsRes.data) setProducts(prodsRes.data as Product[]);
+    if (catsRes.data) setCategories(catsRes.data as Category[]);
   };
 
   useEffect(() => { load(); }, [userId]);
 
   const resetForm = () => {
-    setForm({ name: "", price: "", variants: "", image_url: "", stock_count: "", video_url: "", description: "" });
+    setForm({ name: "", price: "", variants: "", image_url: "", stock_count: "", video_url: "", description: "", category_id: "" });
     setShowForm(false);
     setEditId(null);
     setImagePreview(null);
@@ -96,6 +108,7 @@ const ProductManager = ({ userId }: Props) => {
       stock_count: form.stock_count ? parseInt(form.stock_count) : null,
       video_url: form.video_url || null,
       description: form.description || null,
+      category_id: form.category_id || null,
     };
 
     if (editId) {
@@ -112,7 +125,7 @@ const ProductManager = ({ userId }: Props) => {
   };
 
   const handleEdit = (p: Product) => {
-    setForm({ name: p.name, price: p.price.toString(), variants: p.variants || "", image_url: p.image_url || "", stock_count: (p as any).stock_count?.toString() || "", video_url: (p as any).video_url || "", description: (p as any).description || "" });
+    setForm({ name: p.name, price: p.price.toString(), variants: p.variants || "", image_url: p.image_url || "", stock_count: (p as any).stock_count?.toString() || "", video_url: (p as any).video_url || "", description: (p as any).description || "", category_id: p.category_id || "" });
     setEditId(p.id);
     setImagePreview(p.image_url || null);
     setShowForm(true);
@@ -199,9 +212,25 @@ const ProductManager = ({ userId }: Props) => {
                 <Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="2500" />
               </div>
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Variants (optional)</Label>
-              <Input value={form.variants} onChange={(e) => setForm({ ...form, variants: e.target.value })} placeholder="Red, Blue, Large, Small" />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Variants (optional)</Label>
+                <Input value={form.variants} onChange={(e) => setForm({ ...form, variants: e.target.value })} placeholder="Red, Blue, Large, Small" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Category (optional)</Label>
+                <Select value={form.category_id} onValueChange={(v) => setForm({ ...form, category_id: v === "none" ? "" : v })}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Category</SelectItem>
+                    {categories.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">

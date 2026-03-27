@@ -9,6 +9,9 @@ import ChatWidget from "@/components/store/ChatWidget";
 import { CartProvider, useCart } from "@/components/store/CartContext";
 import CartDrawer from "@/components/store/CartDrawer";
 import CheckoutDialog from "@/components/store/CheckoutDialog";
+import OfferBanner from "@/components/store/OfferBanner";
+import RecentOrdersPopup from "@/components/store/RecentOrdersPopup";
+import ContactButtons from "@/components/store/ContactButtons";
 import { toast } from "sonner";
 
 interface Product {
@@ -19,6 +22,12 @@ interface Product {
   variants: string | null;
   image_url: string | null;
   stock_count: number | null;
+  category_id: string | null;
+}
+
+interface Category {
+  id: string;
+  name: string;
 }
 
 interface StoreProfile {
@@ -27,12 +36,23 @@ interface StoreProfile {
   whatsapp: string;
 }
 
+interface StoreSettingsData {
+  offer_banner_enabled: boolean;
+  offer_banner_text: string;
+  urgency_timer_enabled: boolean;
+  urgency_timer_end: string | null;
+  urgency_timer_label: string;
+}
+
 const StoreContent = () => {
   const { storeName } = useParams<{ storeName: string }>();
   const [profile, setProfile] = useState<StoreProfile | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [storeSettings, setStoreSettings] = useState<StoreSettingsData | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const { addItem } = useCart();
 
@@ -51,13 +71,16 @@ const StoreContent = () => {
       if (!match) { setNotFound(true); return; }
       setProfile(match as StoreProfile);
 
-      const { data: prods } = await supabase
-        .from("products")
-        .select("*")
-        .eq("user_id", match.user_id)
-        .order("created_at", { ascending: false });
+      // Load products, categories, settings in parallel
+      const [prodsRes, catsRes, settingsRes] = await Promise.all([
+        supabase.from("products").select("*").eq("user_id", match.user_id).order("created_at", { ascending: false }),
+        supabase.from("categories").select("*").eq("user_id", match.user_id).order("created_at", { ascending: true }),
+        supabase.from("store_settings").select("*").eq("user_id", match.user_id).single(),
+      ]);
 
-      if (prods) setProducts(prods as unknown as Product[]);
+      if (prodsRes.data) setProducts(prodsRes.data as unknown as Product[]);
+      if (catsRes.data) setCategories(catsRes.data as Category[]);
+      if (settingsRes.data) setStoreSettings(settingsRes.data as unknown as StoreSettingsData);
     };
     load();
   }, [storeName]);
@@ -82,7 +105,11 @@ const StoreContent = () => {
     );
   }
 
-  const filtered = products.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
+  const filtered = products.filter((p) => {
+    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = !activeCategory || p.category_id === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const handleAddToCart = (p: Product) => {
     if (p.stock_count !== null && p.stock_count <= 0) {
@@ -95,17 +122,22 @@ const StoreContent = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Offer Banner */}
+      {storeSettings?.offer_banner_enabled && storeSettings.offer_banner_text && (
+        <OfferBanner text={storeSettings.offer_banner_text} />
+      )}
+
       <header className="relative overflow-hidden">
-        <div className="whatsapp-gradient py-10 sm:py-16 px-4">
+        <div className="whatsapp-gradient py-8 sm:py-16 px-4">
           <div className="container max-w-5xl mx-auto text-center relative z-10">
-            <div className="w-20 h-20 rounded-full bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-4 border-2 border-primary-foreground/30">
-              <ShoppingBag className="w-10 h-10 text-primary-foreground" />
+            <div className="w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-3 sm:mb-4 border-2 border-primary-foreground/30">
+              <ShoppingBag className="w-8 sm:w-10 h-8 sm:h-10 text-primary-foreground" />
             </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-primary-foreground tracking-tight">{profile.store_name}</h1>
-            <p className="text-primary-foreground/80 mt-2 text-sm sm:text-base">Order via WhatsApp • Fast Delivery 🇵🇰</p>
-            <div className="mt-6 max-w-md mx-auto relative">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-primary-foreground tracking-tight">{profile.store_name}</h1>
+            <p className="text-primary-foreground/80 mt-1 sm:mt-2 text-xs sm:text-base">Order via WhatsApp • Fast Delivery 🇵🇰</p>
+            <div className="mt-4 sm:mt-6 max-w-md mx-auto relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search products..." className="pl-10 bg-primary-foreground/95 border-0 shadow-lg text-foreground placeholder:text-muted-foreground h-11 rounded-full" />
+              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search products..." className="pl-10 bg-primary-foreground/95 border-0 shadow-lg text-foreground placeholder:text-muted-foreground h-10 sm:h-11 rounded-full" />
             </div>
           </div>
         </div>
@@ -114,9 +146,34 @@ const StoreContent = () => {
         </div>
       </header>
 
-      <main className="container max-w-5xl mx-auto px-4 py-6 sm:py-10">
+      <main className="container max-w-5xl mx-auto px-4 py-4 sm:py-10">
+        {/* Category Filter */}
+        {categories.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-4 mb-4 scrollbar-hide">
+            <button
+              onClick={() => setActiveCategory(null)}
+              className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                !activeCategory ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-accent"
+              }`}
+            >
+              All
+            </button>
+            {categories.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => setActiveCategory(c.id)}
+                className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  activeCategory === c.id ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-accent"
+                }`}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
+        )}
+
         {filtered.length === 0 && products.length > 0 && (
-          <p className="text-center text-muted-foreground py-12">No products match "{search}"</p>
+          <p className="text-center text-muted-foreground py-12">No products match your search</p>
         )}
         {products.length === 0 ? (
           <p className="text-center text-muted-foreground py-16 text-lg">No products available yet.</p>
@@ -169,6 +226,8 @@ const StoreContent = () => {
 
       <CartDrawer onCheckout={() => setCheckoutOpen(true)} />
       <CheckoutDialog open={checkoutOpen} onClose={() => setCheckoutOpen(false)} storeUserId={profile.user_id} storeName={profile.store_name} whatsapp={profile.whatsapp} />
+      <ContactButtons whatsapp={profile.whatsapp} storeName={profile.store_name} />
+      <RecentOrdersPopup storeUserId={profile.user_id} />
       <ChatWidget storeUserId={profile.user_id} storeName={profile.store_name} whatsapp={profile.whatsapp} />
     </div>
   );

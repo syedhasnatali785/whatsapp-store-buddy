@@ -3,10 +3,11 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, ArrowLeft, Image, MessageCircle, AlertTriangle } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Image, MessageCircle, AlertTriangle, Phone } from "lucide-react";
 import { CartProvider, useCart } from "@/components/store/CartContext";
 import CartDrawer from "@/components/store/CartDrawer";
 import CheckoutDialog from "@/components/store/CheckoutDialog";
+import UrgencyTimer from "@/components/store/UrgencyTimer";
 import { toast } from "sonner";
 
 interface Product {
@@ -27,10 +28,17 @@ interface StoreProfile {
   whatsapp: string;
 }
 
+interface StoreSettingsData {
+  urgency_timer_enabled: boolean;
+  urgency_timer_end: string | null;
+  urgency_timer_label: string;
+}
+
 const ProductDetailContent = () => {
   const { storeName, productId } = useParams<{ storeName: string; productId: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [profile, setProfile] = useState<StoreProfile | null>(null);
+  const [storeSettings, setStoreSettings] = useState<StoreSettingsData | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const { addItem } = useCart();
@@ -51,15 +59,14 @@ const ProductDetailContent = () => {
       if (!match) { setNotFound(true); return; }
       setProfile(match as StoreProfile);
 
-      const { data: prod } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", productId)
-        .eq("user_id", match.user_id)
-        .single();
+      const [prodRes, settingsRes] = await Promise.all([
+        supabase.from("products").select("*").eq("id", productId).eq("user_id", match.user_id).single(),
+        supabase.from("store_settings").select("*").eq("user_id", match.user_id).single(),
+      ]);
 
-      if (!prod) { setNotFound(true); return; }
-      setProduct(prod as unknown as Product);
+      if (!prodRes.data) { setNotFound(true); return; }
+      setProduct(prodRes.data as unknown as Product);
+      if (settingsRes.data) setStoreSettings(settingsRes.data as unknown as StoreSettingsData);
     };
     load();
   }, [storeName, productId]);
@@ -97,6 +104,7 @@ const ProductDetailContent = () => {
 
   const whatsappMsg = encodeURIComponent(`Hi ${profile.store_name}! I'm interested in ${product.name} (Rs ${product.price.toLocaleString()}). Please share more details.`);
   const outOfStock = product.stock_count !== null && product.stock_count <= 0;
+  const callNumber = profile.whatsapp.startsWith("+") ? profile.whatsapp : `+${profile.whatsapp}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -109,8 +117,8 @@ const ProductDetailContent = () => {
         </div>
       </header>
 
-      <main className="container max-w-5xl mx-auto px-4 py-6 sm:py-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+      <main className="container max-w-5xl mx-auto px-4 py-4 sm:py-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-10">
           {/* Image */}
           <div className="aspect-square bg-muted rounded-2xl overflow-hidden relative">
             {product.image_url ? (
@@ -129,8 +137,15 @@ const ProductDetailContent = () => {
 
           {/* Details */}
           <div className="flex flex-col">
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{product.name}</h1>
-            <p className="text-3xl font-extrabold text-primary mt-2">Rs {product.price.toLocaleString()}</p>
+            <h1 className="text-xl sm:text-3xl font-bold text-foreground">{product.name}</h1>
+            <p className="text-2xl sm:text-3xl font-extrabold text-primary mt-2">Rs {product.price.toLocaleString()}</p>
+
+            {/* Urgency Timer */}
+            {storeSettings?.urgency_timer_enabled && storeSettings.urgency_timer_end && (
+              <div className="mt-4">
+                <UrgencyTimer endTime={storeSettings.urgency_timer_end} label={storeSettings.urgency_timer_label} />
+              </div>
+            )}
 
             {product.variants && (
               <div className="flex flex-wrap gap-2 mt-4">
@@ -141,23 +156,31 @@ const ProductDetailContent = () => {
             )}
 
             {product.description && (
-              <div className="mt-6">
+              <div className="mt-4 sm:mt-6">
                 <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">Description</h2>
-                <p className="text-foreground leading-relaxed whitespace-pre-wrap">{product.description}</p>
+                <p className="text-foreground leading-relaxed whitespace-pre-wrap text-sm sm:text-base">{product.description}</p>
               </div>
             )}
 
-            <div className="mt-auto pt-6 space-y-3">
-              <Button className="w-full rounded-full h-12 text-base" onClick={handleAddToCart} disabled={outOfStock}>
+            <div className="mt-auto pt-4 sm:pt-6 space-y-2 sm:space-y-3">
+              <Button className="w-full rounded-full h-11 sm:h-12 text-sm sm:text-base" onClick={handleAddToCart} disabled={outOfStock}>
                 <ShoppingCart className="w-5 h-5 mr-2" />
                 {outOfStock ? "Out of Stock" : "Add to Cart"}
               </Button>
-              <Button variant="outline" className="w-full rounded-full h-12 text-base" asChild>
-                <a href={`https://wa.me/${profile.whatsapp}?text=${whatsappMsg}`} target="_blank" rel="noopener noreferrer">
-                  <MessageCircle className="w-5 h-5 mr-2" />
-                  Chat on WhatsApp
-                </a>
-              </Button>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" className="rounded-full h-11 sm:h-12 text-sm" asChild>
+                  <a href={`https://wa.me/${profile.whatsapp}?text=${whatsappMsg}`} target="_blank" rel="noopener noreferrer">
+                    <MessageCircle className="w-4 h-4 mr-1.5" />
+                    WhatsApp
+                  </a>
+                </Button>
+                <Button variant="outline" className="rounded-full h-11 sm:h-12 text-sm" asChild>
+                  <a href={`tel:${callNumber}`}>
+                    <Phone className="w-4 h-4 mr-1.5" />
+                    Call Now
+                  </a>
+                </Button>
+              </div>
             </div>
 
             {product.video_url && (
