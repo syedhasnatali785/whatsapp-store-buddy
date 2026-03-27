@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           active: boolean
@@ -121,6 +142,7 @@ export type Database = {
       }
       products: {
         Row: {
+          category_id: string | null
           created_at: string
           description: string | null
           id: string
@@ -134,6 +156,7 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          category_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -147,6 +170,7 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          category_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -159,7 +183,15 @@ export type Database = {
           variants?: string | null
           video_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -200,6 +232,42 @@ export type Database = {
           updated_at?: string
           user_id?: string
           whatsapp?: string
+        }
+        Relationships: []
+      }
+      store_settings: {
+        Row: {
+          created_at: string
+          id: string
+          offer_banner_enabled: boolean
+          offer_banner_text: string | null
+          updated_at: string
+          urgency_timer_enabled: boolean
+          urgency_timer_end: string | null
+          urgency_timer_label: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          offer_banner_enabled?: boolean
+          offer_banner_text?: string | null
+          updated_at?: string
+          urgency_timer_enabled?: boolean
+          urgency_timer_end?: string | null
+          urgency_timer_label?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          offer_banner_enabled?: boolean
+          offer_banner_text?: string | null
+          updated_at?: string
+          urgency_timer_enabled?: boolean
+          urgency_timer_end?: string | null
+          urgency_timer_label?: string | null
+          user_id?: string
         }
         Relationships: []
       }
