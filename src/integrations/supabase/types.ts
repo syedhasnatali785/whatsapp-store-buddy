@@ -260,6 +260,7 @@ export type Database = {
           urgency_timer_end: string | null
           urgency_timer_label: string | null
           user_id: string
+          whatsapp_templates: Json
         }
         Insert: {
           created_at?: string
@@ -282,6 +283,7 @@ export type Database = {
           urgency_timer_end?: string | null
           urgency_timer_label?: string | null
           user_id: string
+          whatsapp_templates?: Json
         }
         Update: {
           created_at?: string
@@ -304,6 +306,7 @@ export type Database = {
           urgency_timer_end?: string | null
           urgency_timer_label?: string | null
           user_id?: string
+          whatsapp_templates?: Json
         }
         Relationships: []
       }
