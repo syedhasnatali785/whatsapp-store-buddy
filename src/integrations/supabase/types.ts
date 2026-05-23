@@ -309,7 +309,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_stores: {
+        Row: {
+          store_name: string | null
+          user_id: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          store_name?: string | null
+          user_id?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          store_name?: string | null
+          user_id?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
