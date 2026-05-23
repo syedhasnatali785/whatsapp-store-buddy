@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ClipboardList, Package, CheckCircle, Clock, MessageSquare, Truck, XCircle, Send } from "lucide-react";
+import { ClipboardList, Package, CheckCircle, Clock, Truck, XCircle, Send } from "lucide-react";
+import { DEFAULT_TEMPLATES, type TemplateKey } from "./MessageTemplates";
 
 interface Order {
   id: string;
@@ -20,31 +21,11 @@ interface Props {
   userId: string;
 }
 
-const MESSAGE_TEMPLATES = {
-  confirm: {
-    label: "✅ Confirm",
-    icon: CheckCircle,
-    variant: "outline" as const,
-    template: `Assalam o Alaikum {name}, aapka order confirm ho gaya hai.\n\nProducts:\n{products}\n\nTotal: Rs {price}\nAddress: {address}\n\nShukriya! 🙏`,
-  },
-  dispatch: {
-    label: "📦 Dispatch",
-    icon: Package,
-    variant: "outline" as const,
-    template: `Assalam o Alaikum {name}, aapka order dispatch ho gaya hai! 🎉\n\nProducts:\n{products}\n\nTotal: Rs {price}\nAddress: {address}\n\nJald aapko mil jayega, InshaAllah!`,
-  },
-  delivery: {
-    label: "🚚 Delivery",
-    icon: Truck,
-    variant: "outline" as const,
-    template: `Assalam o Alaikum {name}, aapka order delivery ke liye nikal chuka hai! 🚚\n\nProducts:\n{products}\n\nTotal: Rs {price}\nAddress: {address}\n\nPlease apna phone on rakhein. Shukriya!`,
-  },
-  cancel: {
-    label: "❌ Cancel",
-    icon: XCircle,
-    variant: "outline" as const,
-    template: `Assalam o Alaikum {name}, maazrat ke saath aapka order cancel karna par raha hai.\n\nProducts:\n{products}\n\nTotal: Rs {price}\n\nAgar koi sawal ho toh zaroor poochein. Shukriya!`,
-  },
+const TEMPLATE_LABELS: Record<TemplateKey, string> = {
+  confirm: "✅ Confirm",
+  dispatch: "📦 Dispatch",
+  delivery: "🚚 Delivery",
+  cancel: "❌ Cancel",
 };
 
 const normalizePhone = (phone: string): string => {
@@ -54,22 +35,22 @@ const normalizePhone = (phone: string): string => {
   return cleaned;
 };
 
-const openWhatsApp = (order: Order, templateKey: keyof typeof MESSAGE_TEMPLATES) => {
-  const { template } = MESSAGE_TEMPLATES[templateKey];
+const openWhatsApp = (order: Order, template: string) => {
   const productsText = order.products
     .map((p) => `• ${p.name} x${p.quantity} — Rs ${(p.price * p.quantity).toLocaleString()}`)
     .join("\n");
   const message = template
-    .replace("{name}", order.customer_name)
-    .replace("{products}", productsText)
-    .replace("{price}", order.total_price.toLocaleString())
-    .replace("{address}", order.address || "N/A");
+    .replaceAll("{name}", order.customer_name)
+    .replaceAll("{products}", productsText)
+    .replaceAll("{price}", order.total_price.toLocaleString())
+    .replaceAll("{address}", order.address || "N/A");
   const phone = normalizePhone(order.phone);
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
 };
 
 const OrdersDashboard = ({ userId }: Props) => {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [templates, setTemplates] = useState<Record<TemplateKey, string>>(DEFAULT_TEMPLATES);
 
   const load = async () => {
     const { data } = await supabase
@@ -80,7 +61,18 @@ const OrdersDashboard = ({ userId }: Props) => {
     if (data) setOrders(data as unknown as Order[]);
   };
 
-  useEffect(() => { load(); }, [userId]);
+  useEffect(() => {
+    load();
+    (async () => {
+      const { data } = await supabase
+        .from("store_settings")
+        .select("whatsapp_templates")
+        .eq("user_id", userId)
+        .maybeSingle();
+      const t = (data as any)?.whatsapp_templates ?? {};
+      setTemplates({ ...DEFAULT_TEMPLATES, ...t });
+    })();
+  }, [userId]);
 
   const toggleStatus = async (id: string, current: string) => {
     const newStatus = current === "pending" ? "completed" : "pending";
@@ -156,15 +148,15 @@ const OrdersDashboard = ({ userId }: Props) => {
                   <span className="w-full text-[10px] text-muted-foreground flex items-center gap-1 mb-0.5">
                     <Send className="w-3 h-3" /> Send WhatsApp Message:
                   </span>
-                  {(Object.keys(MESSAGE_TEMPLATES) as (keyof typeof MESSAGE_TEMPLATES)[]).map((key) => (
+                  {(Object.keys(TEMPLATE_LABELS) as TemplateKey[]).map((key) => (
                     <Button
                       key={key}
                       variant="outline"
                       size="sm"
                       className="text-[10px] h-6 px-2"
-                      onClick={() => openWhatsApp(o, key)}
+                      onClick={() => openWhatsApp(o, templates[key])}
                     >
-                      {MESSAGE_TEMPLATES[key].label}
+                      {TEMPLATE_LABELS[key]}
                     </Button>
                   ))}
                 </div>

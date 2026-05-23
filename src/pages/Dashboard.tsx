@@ -11,6 +11,7 @@ import Analytics from "@/components/dashboard/Analytics";
 import CouponManager from "@/components/dashboard/CouponManager";
 import CategoryManager from "@/components/dashboard/CategoryManager";
 import StoreCustomization from "@/components/dashboard/StoreCustomization";
+import MessageTemplates from "@/components/dashboard/MessageTemplates";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MessageSquare, LogOut, ExternalLink, Menu, X } from "lucide-react";
@@ -84,6 +85,7 @@ const Dashboard = () => {
               <TabsTrigger value="categories" className="text-xs px-3">Categories</TabsTrigger>
               <TabsTrigger value="coupons" className="text-xs px-3">Coupons</TabsTrigger>
               <TabsTrigger value="replies" className="text-xs px-3">Replies</TabsTrigger>
+              <TabsTrigger value="templates" className="text-xs px-3">Templates</TabsTrigger>
               <TabsTrigger value="customize" className="text-xs px-3">Customize</TabsTrigger>
               <TabsTrigger value="analytics" className="text-xs px-3">Stats</TabsTrigger>
               <TabsTrigger value="ai" className="text-xs px-3">AI</TabsTrigger>
@@ -96,6 +98,7 @@ const Dashboard = () => {
           <TabsContent value="categories"><CategoryManager userId={user.id} /></TabsContent>
           <TabsContent value="coupons"><CouponManager userId={user.id} /></TabsContent>
           <TabsContent value="replies"><CustomReplies userId={user.id} /></TabsContent>
+          <TabsContent value="templates"><MessageTemplates userId={user.id} /></TabsContent>
           <TabsContent value="customize"><StoreCustomization userId={user.id} /></TabsContent>
           <TabsContent value="analytics"><Analytics userId={user.id} /></TabsContent>
           <TabsContent value="ai"><AiUsage userId={user.id} /></TabsContent>
