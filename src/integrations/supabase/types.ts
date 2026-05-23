@@ -246,6 +246,7 @@ export type Database = {
           hero_cta_text: string | null
           hero_image_url: string | null
           hero_slider_enabled: boolean
+          hero_slides: Json
           hero_subtitle: string | null
           hero_title: string | null
           id: string
@@ -267,6 +268,7 @@ export type Database = {
           hero_cta_text?: string | null
           hero_image_url?: string | null
           hero_slider_enabled?: boolean
+          hero_slides?: Json
           hero_subtitle?: string | null
           hero_title?: string | null
           id?: string
@@ -288,6 +290,7 @@ export type Database = {
           hero_cta_text?: string | null
           hero_image_url?: string | null
           hero_slider_enabled?: boolean
+          hero_slides?: Json
           hero_subtitle?: string | null
           hero_title?: string | null
           id?: string
