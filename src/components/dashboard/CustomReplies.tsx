@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Trash2, MessageCircle, X, Check } from "lucide-react";
+import { Plus, Trash2, MessageCircle, X, Check, Edit2 } from "lucide-react";
 
 interface Reply {
   id: string;
@@ -112,7 +112,7 @@ const CustomReplies = ({ userId }: Props) => {
                 </div>
                 <div className="flex shrink-0 gap-1">
                   <Button variant="ghost" size="icon" onClick={() => handleEdit(r)}>
-                    <Check className="w-4 h-4 text-primary" />
+                    <Edit2 className="w-4 h-4 text-primary" />
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => handleDelete(r.id)}>
                     <Trash2 className="w-4 h-4 text-destructive" />
