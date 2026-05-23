@@ -278,12 +278,46 @@ const StoreContent = () => {
           </div>
         )}
 
+        {storeSettings?.featured_enabled !== false && featuredProducts.length > 0 && (
+          <section id="featured" className="mb-8 sm:mb-12">
+            <div className="mb-4 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary">Best picks</p>
+                <h2 className="text-xl font-extrabold text-foreground sm:text-2xl">{storeSettings?.featured_title || "Featured Products"}</h2>
+              </div>
+              <Button variant="ghost" size="sm" className="hidden sm:inline-flex" onClick={() => document.getElementById("products")?.scrollIntoView({ behavior: "smooth" })}>View all</Button>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {featuredProducts.map((p) => (
+                <div key={p.id} className="group grid grid-cols-[108px_1fr] overflow-hidden rounded-xl border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg sm:block">
+                  <Link to={`/store/${storeName}/product/${p.id}`} className="block bg-muted">
+                    <div className="aspect-square overflow-hidden">
+                      {p.image_url ? <img src={p.image_url} alt={p.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" /> : <div className="flex h-full w-full items-center justify-center"><Image className="h-10 w-10 text-muted-foreground/40" /></div>}
+                    </div>
+                  </Link>
+                  <div className="flex min-w-0 flex-col p-3">
+                    <Badge className="mb-2 w-fit">Featured</Badge>
+                    <Link to={`/store/${storeName}/product/${p.id}`} className="font-semibold leading-tight line-clamp-2 hover:text-primary">{p.name}</Link>
+                    <p className="mt-1 text-lg font-extrabold text-primary">Rs {p.price.toLocaleString()}</p>
+                    <Button size="sm" className="mt-auto rounded-full" onClick={() => handleAddToCart(p)} disabled={p.stock_count !== null && p.stock_count <= 0}>Add</Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {filtered.length === 0 && products.length > 0 && (
           <p className="text-center text-muted-foreground py-12">No products match your search</p>
         )}
         {products.length === 0 ? (
           <p className="text-center text-muted-foreground py-16 text-lg">No products available yet.</p>
         ) : (
+          <section id="products">
+          <div className="mb-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Catalog</p>
+            <h2 className="text-xl font-extrabold text-foreground sm:text-2xl">All Products</h2>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
             {filtered.map((p) => (
               <div key={p.id} className="group bg-card rounded-xl border overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col">
@@ -323,11 +357,22 @@ const StoreContent = () => {
               </div>
             ))}
           </div>
+          </section>
         )}
       </main>
 
-      <footer className="border-t mt-8 py-6 text-center">
-        <p className="text-xs text-muted-foreground">Powered by <span className="font-semibold text-primary">Syedom</span></p>
+      <footer className="border-t bg-card mt-8 py-8">
+        <div className="container max-w-6xl mx-auto px-4 grid gap-4 sm:grid-cols-[1fr_auto] sm:items-center">
+          <div>
+            <p className="font-bold text-foreground">{profile.store_name}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{storeSettings?.footer_text || "Thank you for shopping with us."}</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="rounded-full" asChild><a href={`tel:${callNumber}`}><Phone className="mr-1.5 h-4 w-4" />Call</a></Button>
+            <Button size="sm" className="rounded-full" asChild><a href={`https://wa.me/${whatsappNumber}?text=${whatsappMsg}`} target="_blank" rel="noopener noreferrer"><MessageCircle className="mr-1.5 h-4 w-4" />WhatsApp</a></Button>
+          </div>
+        </div>
+        <p className="mt-6 text-center text-xs text-muted-foreground">Powered by <span className="font-semibold text-primary">Syedom</span></p>
       </footer>
 
       <CartDrawer onCheckout={() => setCheckoutOpen(true)} />
