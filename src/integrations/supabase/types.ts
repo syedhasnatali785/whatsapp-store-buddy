@@ -145,6 +145,7 @@ export type Database = {
           category_id: string | null
           created_at: string
           description: string | null
+          featured: boolean
           id: string
           image_url: string | null
           name: string
@@ -159,6 +160,7 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           description?: string | null
+          featured?: boolean
           id?: string
           image_url?: string | null
           name: string
@@ -173,6 +175,7 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           description?: string | null
+          featured?: boolean
           id?: string
           image_url?: string | null
           name?: string
@@ -238,6 +241,17 @@ export type Database = {
       store_settings: {
         Row: {
           created_at: string
+          featured_enabled: boolean
+          featured_limit: number
+          featured_title: string | null
+          footer_text: string | null
+          header_announcement: string | null
+          hero_cta_text: string | null
+          hero_image_url: string | null
+          hero_slider_enabled: boolean
+          hero_slides: Json
+          hero_subtitle: string | null
+          hero_title: string | null
           id: string
           offer_banner_enabled: boolean
           offer_banner_text: string | null
@@ -249,6 +263,17 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          featured_enabled?: boolean
+          featured_limit?: number
+          featured_title?: string | null
+          footer_text?: string | null
+          header_announcement?: string | null
+          hero_cta_text?: string | null
+          hero_image_url?: string | null
+          hero_slider_enabled?: boolean
+          hero_slides?: Json
+          hero_subtitle?: string | null
+          hero_title?: string | null
           id?: string
           offer_banner_enabled?: boolean
           offer_banner_text?: string | null
@@ -260,6 +285,17 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          featured_enabled?: boolean
+          featured_limit?: number
+          featured_title?: string | null
+          footer_text?: string | null
+          header_announcement?: string | null
+          hero_cta_text?: string | null
+          hero_image_url?: string | null
+          hero_slider_enabled?: boolean
+          hero_slides?: Json
+          hero_subtitle?: string | null
+          hero_title?: string | null
           id?: string
           offer_banner_enabled?: boolean
           offer_banner_text?: string | null
