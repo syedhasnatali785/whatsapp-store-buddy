@@ -82,10 +82,9 @@ const StoreContent = () => {
   useEffect(() => {
     const load = async () => {
       if (!storeName) return;
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, store_name, whatsapp")
-        .eq("status", "approved");
+      const { data: profiles } = await (supabase as any)
+        .from("public_stores")
+        .select("user_id, store_name, whatsapp");
 
       if (!profiles) { setNotFound(true); return; }
       const match = profiles.find(

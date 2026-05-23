@@ -27,42 +27,16 @@ const CheckoutDialog = ({ open, onClose, storeUserId, storeName, whatsapp }: Pro
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
 
-    const { data } = await supabase
-      .from("coupons")
-      .select("*")
-      .eq("user_id", storeUserId)
-      .eq("code", couponCode.trim().toUpperCase())
-      .eq("active", true)
-      .single();
-
-    if (!data) {
-      toast.error("Invalid or expired coupon");
+    const { data, error } = await supabase.functions.invoke("validate-coupon", {
+      body: { storeUserId, code: couponCode.trim(), totalPrice },
+    });
+    if (error || !data || data.error || !data.couponId) {
+      toast.error(data?.error || "Invalid or expired coupon");
       return;
     }
-
-    const coupon = data as any;
-
-    if (coupon.max_uses && coupon.used_count >= coupon.max_uses) {
-      toast.error("Coupon usage limit reached");
-      return;
-    }
-
-    if (coupon.min_order > totalPrice) {
-      toast.error(`Minimum order Rs ${coupon.min_order} required`);
-      return;
-    }
-
-    let disc = 0;
-
-    if (coupon.type === "percentage") {
-      disc = Math.round(totalPrice * (coupon.value / 100));
-    } else {
-      disc = Math.min(coupon.value, totalPrice);
-    }
-
-    setDiscount(disc);
-    setCouponApplied(coupon.id);
-    toast.success(`Coupon applied! Rs ${disc.toLocaleString()} off`);
+    setDiscount(data.discount);
+    setCouponApplied(data.couponId);
+    toast.success(`Coupon applied! Rs ${Number(data.discount).toLocaleString()} off`);
   };
 
   const removeCoupon = () => {
@@ -101,13 +75,7 @@ const CheckoutDialog = ({ open, onClose, storeUserId, storeName, whatsapp }: Pro
       });
 
       if (couponApplied) {
-        const { data: coupon } = await supabase.from("coupons").select("used_count").eq("id", couponApplied).single();
-
-        if (coupon) {
-          await supabase.from("coupons").update({
-            used_count: (coupon as any).used_count + 1,
-          } as any).eq("id", couponApplied);
-        }
+        await supabase.functions.invoke("redeem-coupon", { body: { couponId: couponApplied } });
       }
 
       const productListWithImages = items
