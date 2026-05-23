@@ -254,6 +254,10 @@ const ProductManager = ({ userId }: Props) => {
                 className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-h-[80px] resize-y"
               />
             </div>
+            <div className="flex items-center justify-between rounded-lg border bg-background px-3 py-2">
+              <Label className="text-sm">Show in Featured Products</Label>
+              <Switch checked={form.featured} onCheckedChange={(checked) => setForm({ ...form, featured: checked })} />
+            </div>
             <Button onClick={handleSubmit} size="sm" disabled={uploading}>
               <Check className="w-4 h-4 mr-1" />
               {editId ? "Update" : "Add Product"}
@@ -277,6 +281,7 @@ const ProductManager = ({ userId }: Props) => {
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">{p.name}</p>
                   <p className="text-sm text-primary font-semibold">Rs {p.price}</p>
+                  {p.featured && <p className="text-xs text-muted-foreground">Featured product</p>}
                   {p.variants && <p className="text-xs text-muted-foreground">{p.variants}</p>}
                 </div>
                 <div className="flex gap-1">
