@@ -134,6 +134,20 @@ const StoreContent = () => {
     return matchesSearch && matchesCategory;
   });
 
+  const whatsappNumber = normalizePhone(profile.whatsapp);
+  const callNumber = profile.whatsapp.startsWith("+") ? profile.whatsapp : `+${whatsappNumber}`;
+  const whatsappMsg = encodeURIComponent(`Hi ${profile.store_name}! I'm interested in your products.`);
+  const savedSlides = Array.isArray(storeSettings?.hero_slides) ? storeSettings?.hero_slides as HeroSlide[] : [];
+  const heroSlides = savedSlides.length ? savedSlides : [{
+    title: storeSettings?.hero_title || `Shop ${profile.store_name}`,
+    subtitle: storeSettings?.hero_subtitle || "Discover products, add to cart, and order instantly on WhatsApp.",
+    image_url: storeSettings?.hero_image_url || "",
+    cta_text: storeSettings?.hero_cta_text || "Shop Now",
+  }];
+  const featuredProducts = products
+    .filter((p) => p.featured)
+    .slice(0, storeSettings?.featured_limit || 4);
+
   const handleAddToCart = (p: Product) => {
     if (p.stock_count !== null && p.stock_count <= 0) {
       toast.error("This product is out of stock");
@@ -150,26 +164,95 @@ const StoreContent = () => {
         <OfferBanner text={storeSettings.offer_banner_text} />
       )}
 
-      <header className="relative overflow-hidden">
-        <div className="whatsapp-gradient py-8 sm:py-16 px-4">
-          <div className="container max-w-5xl mx-auto text-center relative z-10">
-            <div className="w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-primary-foreground/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-3 sm:mb-4 border-2 border-primary-foreground/30">
-              <ShoppingBag className="w-8 sm:w-10 h-8 sm:h-10 text-primary-foreground" />
+      <header className="sticky top-0 z-30 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+        {storeSettings?.header_announcement && (
+          <div className="bg-primary px-4 py-1.5 text-center text-xs font-medium text-primary-foreground">
+            {storeSettings.header_announcement}
+          </div>
+        )}
+        <div className="container max-w-6xl mx-auto flex h-14 items-center justify-between px-4">
+          <Link to={`/store/${storeName}`} className="flex min-w-0 items-center gap-2">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl whatsapp-gradient">
+              <ShoppingBag className="h-5 w-5 text-primary-foreground" />
             </div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-primary-foreground tracking-tight">{profile.store_name}</h1>
-            <p className="text-primary-foreground/80 mt-1 sm:mt-2 text-xs sm:text-base">Order via WhatsApp • Fast Delivery 🇵🇰</p>
-            <div className="mt-4 sm:mt-6 max-w-md mx-auto relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search products..." className="pl-10 bg-primary-foreground/95 border-0 shadow-lg text-foreground placeholder:text-muted-foreground h-10 sm:h-11 rounded-full" />
+            <span className="truncate text-base font-extrabold text-foreground">{profile.store_name}</span>
+          </Link>
+          <nav className="hidden items-center gap-5 text-sm font-medium text-muted-foreground sm:flex">
+            <a href="#featured" className="hover:text-foreground">Featured</a>
+            <a href="#products" className="hover:text-foreground">Products</a>
+            <a href={`tel:${callNumber}`} className="hover:text-foreground">Call</a>
+            <Button size="sm" className="rounded-full" asChild>
+              <a href={`https://wa.me/${whatsappNumber}?text=${whatsappMsg}`} target="_blank" rel="noopener noreferrer">
+                <MessageCircle className="mr-1.5 h-4 w-4" />WhatsApp
+              </a>
+            </Button>
+          </nav>
+          <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+        </div>
+        {menuOpen && (
+          <div className="border-t bg-card px-4 py-3 sm:hidden">
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" asChild><a href="#products" onClick={() => setMenuOpen(false)}>Products</a></Button>
+              <Button variant="outline" asChild><a href={`tel:${callNumber}`}>Call Now</a></Button>
+              <Button className="col-span-2" asChild><a href={`https://wa.me/${whatsappNumber}?text=${whatsappMsg}`} target="_blank" rel="noopener noreferrer">Chat on WhatsApp</a></Button>
             </div>
           </div>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 50" fill="none" className="w-full"><path d="M0 50V25C240 0 480 0 720 25C960 50 1200 50 1440 25V50H0Z" fill="hsl(var(--background))" /></svg>
-        </div>
+        )}
       </header>
 
-      <main className="container max-w-5xl mx-auto px-4 py-4 sm:py-10">
+      <main className="container max-w-6xl mx-auto px-4 py-4 sm:py-8">
+        {storeSettings?.hero_slider_enabled !== false && (
+          <section className="mb-6 sm:mb-10">
+            <Carousel opts={{ loop: heroSlides.length > 1 }} className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+              <CarouselContent className="ml-0">
+                {heroSlides.map((slide, index) => (
+                  <CarouselItem key={index} className="pl-0">
+                    <div className="relative grid min-h-[330px] overflow-hidden bg-secondary sm:min-h-[390px] md:grid-cols-[1.05fr_0.95fr]">
+                      <div className="relative z-10 flex flex-col justify-center p-6 sm:p-10">
+                        <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-full bg-background/85 px-3 py-1 text-xs font-semibold text-primary shadow-sm">
+                          <Sparkles className="h-3.5 w-3.5" /> Fast WhatsApp checkout
+                        </div>
+                        <h1 className="max-w-xl text-3xl font-extrabold leading-tight text-foreground sm:text-5xl">{slide.title || profile.store_name}</h1>
+                        <p className="mt-3 max-w-lg text-sm leading-6 text-muted-foreground sm:text-base">{slide.subtitle}</p>
+                        <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+                          <Button className="rounded-full" onClick={() => document.getElementById("products")?.scrollIntoView({ behavior: "smooth" })}>
+                            {slide.cta_text || "Shop Now"}<ArrowRight className="ml-2 h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" className="rounded-full" asChild>
+                            <a href={`https://wa.me/${whatsappNumber}?text=${whatsappMsg}`} target="_blank" rel="noopener noreferrer">WhatsApp Store</a>
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="relative min-h-[190px] md:min-h-full">
+                        {slide.image_url ? (
+                          <img src={slide.image_url} alt={slide.title || profile.store_name} className="absolute inset-0 h-full w-full object-cover" loading={index === 0 ? "eager" : "lazy"} />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center whatsapp-gradient">
+                            <ShoppingBag className="h-24 w-24 text-primary-foreground/75" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              {heroSlides.length > 1 && (
+                <>
+                  <CarouselPrevious className="left-3 top-auto bottom-3 sm:left-4 sm:top-1/2 sm:bottom-auto" />
+                  <CarouselNext className="left-14 top-auto bottom-3 sm:left-auto sm:right-4 sm:top-1/2 sm:bottom-auto" />
+                </>
+              )}
+            </Carousel>
+          </section>
+        )}
+
+        <div className="mb-5 max-w-xl relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search products..." className="pl-10 h-11 rounded-full bg-card shadow-sm" />
+        </div>
+
         {/* Category Filter */}
         {categories.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-4 mb-4 scrollbar-hide">
