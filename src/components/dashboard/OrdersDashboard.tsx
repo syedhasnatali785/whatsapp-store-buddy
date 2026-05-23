@@ -40,10 +40,10 @@ const openWhatsApp = (order: Order, template: string) => {
     .map((p) => `• ${p.name} x${p.quantity} — Rs ${(p.price * p.quantity).toLocaleString()}`)
     .join("\n");
   const message = template
-    .replaceAll("{name}", order.customer_name)
-    .replaceAll("{products}", productsText)
-    .replaceAll("{price}", order.total_price.toLocaleString())
-    .replaceAll("{address}", order.address || "N/A");
+    .replace(/\{name\}/g, order.customer_name)
+    .replace(/\{products\}/g, productsText)
+    .replace(/\{price\}/g, order.total_price.toLocaleString())
+    .replace(/\{address\}/g, order.address || "N/A");
   const phone = normalizePhone(order.phone);
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
 };
