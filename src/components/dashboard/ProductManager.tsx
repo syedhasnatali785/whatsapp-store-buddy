@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Edit2, Package, X, Check, Upload, Image, Loader2 } from "lucide-react";
@@ -15,6 +16,7 @@ interface Product {
   variants: string | null;
   image_url: string | null;
   category_id: string | null;
+  featured: boolean;
 }
 
 interface Category {
@@ -34,7 +36,7 @@ const ProductManager = ({ userId }: Props) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", price: "", variants: "", image_url: "", stock_count: "", video_url: "", description: "", category_id: "" });
+  const [form, setForm] = useState({ name: "", price: "", variants: "", image_url: "", stock_count: "", video_url: "", description: "", category_id: "", featured: false });
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -51,7 +53,7 @@ const ProductManager = ({ userId }: Props) => {
   useEffect(() => { load(); }, [userId]);
 
   const resetForm = () => {
-    setForm({ name: "", price: "", variants: "", image_url: "", stock_count: "", video_url: "", description: "", category_id: "" });
+    setForm({ name: "", price: "", variants: "", image_url: "", stock_count: "", video_url: "", description: "", category_id: "", featured: false });
     setShowForm(false);
     setEditId(null);
     setImagePreview(null);
@@ -109,6 +111,7 @@ const ProductManager = ({ userId }: Props) => {
       video_url: form.video_url || null,
       description: form.description || null,
       category_id: form.category_id || null,
+      featured: form.featured,
     };
 
     if (editId) {
@@ -125,7 +128,7 @@ const ProductManager = ({ userId }: Props) => {
   };
 
   const handleEdit = (p: Product) => {
-    setForm({ name: p.name, price: p.price.toString(), variants: p.variants || "", image_url: p.image_url || "", stock_count: (p as any).stock_count?.toString() || "", video_url: (p as any).video_url || "", description: (p as any).description || "", category_id: p.category_id || "" });
+    setForm({ name: p.name, price: p.price.toString(), variants: p.variants || "", image_url: p.image_url || "", stock_count: (p as any).stock_count?.toString() || "", video_url: (p as any).video_url || "", description: (p as any).description || "", category_id: p.category_id || "", featured: p.featured || false });
     setEditId(p.id);
     setImagePreview(p.image_url || null);
     setShowForm(true);
