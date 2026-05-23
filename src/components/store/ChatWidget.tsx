@@ -54,25 +54,21 @@ const ChatWidget = ({ storeUserId, storeName, whatsapp }: Props) => {
       };
     }
 
-    // Step 1: Custom replies
-    const { data: replies } = await supabase.from("custom_replies").select("keyword, response").eq("user_id", storeUserId);
-    if (replies) {
-      for (const r of replies) {
-        if (lower.includes(r.keyword.toLowerCase())) return { text: r.response, showWhatsApp: false };
-      }
-    }
+    // Step 1: Custom replies (matched server-side)
+    try {
+      const { data: matched } = await supabase.functions.invoke("match-reply", {
+        body: { storeUserId, message: userMsg },
+      });
+      if (matched?.reply) return { text: matched.reply, showWhatsApp: false };
+    } catch { /* fallback */ }
 
     // Step 2: Pattern matching
     for (const [key, resp] of Object.entries(PATTERN_RESPONSES)) {
       if (lower.includes(key)) return { text: resp, showWhatsApp: false };
     }
 
-    // Step 3: AI fallback
+    // Step 3: AI fallback (quota enforced server-side)
     try {
-      const { data: profile } = await supabase.from("profiles").select("ai_requests_count, ai_limit").eq("user_id", storeUserId).single();
-      if (!profile || profile.ai_requests_count >= profile.ai_limit) {
-        return { text: "I'm not sure about that. Would you like to chat with us on WhatsApp?", showWhatsApp: true };
-      }
       const resp = await supabase.functions.invoke("store-chat", { body: { message: userMsg, storeUserId, storeName } });
       if (resp.data?.reply) return { text: resp.data.reply, showWhatsApp: false };
     } catch { /* fallback */ }
