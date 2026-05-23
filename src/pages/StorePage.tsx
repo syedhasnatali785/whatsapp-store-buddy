@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, Search, Image, ShoppingCart } from "lucide-react";
+import { ShoppingBag, Search, Image, ShoppingCart, Menu, X, MessageCircle, Phone, Sparkles, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import ChatWidget from "@/components/store/ChatWidget";
 import { CartProvider, useCart } from "@/components/store/CartContext";
 import CartDrawer from "@/components/store/CartDrawer";
@@ -23,6 +24,7 @@ interface Product {
   image_url: string | null;
   stock_count: number | null;
   category_id: string | null;
+  featured: boolean;
 }
 
 interface Category {
@@ -37,12 +39,32 @@ interface StoreProfile {
 }
 
 interface StoreSettingsData {
+  header_announcement: string | null;
   offer_banner_enabled: boolean;
   offer_banner_text: string;
   urgency_timer_enabled: boolean;
   urgency_timer_end: string | null;
   urgency_timer_label: string;
+  hero_slider_enabled: boolean;
+  hero_title: string | null;
+  hero_subtitle: string | null;
+  hero_image_url: string | null;
+  hero_cta_text: string | null;
+  hero_slides: unknown;
+  featured_enabled: boolean;
+  featured_title: string | null;
+  featured_limit: number;
+  footer_text: string | null;
 }
+
+interface HeroSlide {
+  title: string;
+  subtitle: string;
+  image_url: string;
+  cta_text: string;
+}
+
+const normalizePhone = (phone: string) => phone.replace(/\D/g, "").replace(/^0/, "92");
 
 const StoreContent = () => {
   const { storeName } = useParams<{ storeName: string }>();
@@ -54,6 +76,7 @@ const StoreContent = () => {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const { addItem } = useCart();
 
   useEffect(() => {
