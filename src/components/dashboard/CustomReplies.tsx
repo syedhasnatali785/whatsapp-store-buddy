@@ -21,6 +21,7 @@ interface Props {
 const CustomReplies = ({ userId }: Props) => {
   const [replies, setReplies] = useState<Reply[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ keyword: "", response: "" });
 
   const load = async () => {
@@ -30,18 +31,36 @@ const CustomReplies = ({ userId }: Props) => {
 
   useEffect(() => { load(); }, [userId]);
 
-  const handleAdd = async () => {
+  const resetForm = () => {
+    setForm({ keyword: "", response: "" });
+    setEditId(null);
+    setShowForm(false);
+  };
+
+  const handleSave = async () => {
     if (!form.keyword || !form.response) {
       toast.error("Both keyword and response are required");
       return;
     }
-    const { error } = await supabase.from("custom_replies").insert({
+
+    const payload = {
       user_id: userId,
-      keyword: form.keyword.toLowerCase(),
-      response: form.response,
-    });
-    if (error) toast.error("Failed to add");
-    else { toast.success("Reply added!"); setForm({ keyword: "", response: "" }); setShowForm(false); load(); }
+      keyword: form.keyword.toLowerCase().trim(),
+      response: form.response.trim(),
+    };
+
+    const { error } = editId
+      ? await supabase.from("custom_replies").update(payload).eq("id", editId).eq("user_id", userId)
+      : await supabase.from("custom_replies").insert(payload);
+
+    if (error) toast.error(editId ? "Failed to update" : "Failed to add");
+    else { toast.success(editId ? "Reply updated!" : "Reply added!"); resetForm(); load(); }
+  };
+
+  const handleEdit = (reply: Reply) => {
+    setForm({ keyword: reply.keyword, response: reply.response });
+    setEditId(reply.id);
+    setShowForm(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -57,7 +76,7 @@ const CustomReplies = ({ userId }: Props) => {
           <MessageCircle className="w-5 h-5 text-primary" />
           Custom Replies
         </CardTitle>
-        <Button size="sm" onClick={() => setShowForm(!showForm)}>
+        <Button size="sm" onClick={() => showForm ? resetForm() : setShowForm(true)}>
           {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
         </Button>
       </CardHeader>
@@ -72,9 +91,9 @@ const CustomReplies = ({ userId }: Props) => {
               <Label className="text-xs">Response</Label>
               <Textarea value={form.response} onChange={(e) => setForm({ ...form, response: e.target.value })} placeholder="The response to send when this keyword is detected" rows={3} />
             </div>
-            <Button onClick={handleAdd} size="sm">
+            <Button onClick={handleSave} size="sm">
               <Check className="w-4 h-4 mr-1" />
-              Add Reply
+              {editId ? "Update Reply" : "Add Reply"}
             </Button>
           </div>
         )}
@@ -91,9 +110,14 @@ const CustomReplies = ({ userId }: Props) => {
                   </span>
                   <p className="text-sm text-muted-foreground">{r.response}</p>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => handleDelete(r.id)}>
-                  <Trash2 className="w-4 h-4 text-destructive" />
-                </Button>
+                <div className="flex shrink-0 gap-1">
+                  <Button variant="ghost" size="icon" onClick={() => handleEdit(r)}>
+                    <Check className="w-4 h-4 text-primary" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => handleDelete(r.id)}>
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
