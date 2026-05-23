@@ -78,7 +78,7 @@ const StoreCustomization = ({ userId }: Props) => {
 
   const handleSave = async () => {
     setLoading(true);
-    const payload = {
+    const payload: any = {
       user_id: userId,
       offer_banner_enabled: bannerEnabled,
       offer_banner_text: bannerText,
@@ -87,7 +87,7 @@ const StoreCustomization = ({ userId }: Props) => {
       urgency_timer_label: timerLabel,
       header_announcement: headerAnnouncement,
       hero_slider_enabled: heroEnabled,
-      hero_slides: slides,
+      hero_slides: slides.map((slide) => ({ ...slide })),
       hero_title: slides[0]?.title || "",
       hero_subtitle: slides[0]?.subtitle || "",
       hero_image_url: slides[0]?.image_url || "",
@@ -114,6 +114,103 @@ const StoreCustomization = ({ userId }: Props) => {
 
   return (
     <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <LayoutTemplate className="w-5 h-5 text-primary" />
+            Header & Footer
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="space-y-2">
+            <Label className="text-xs">Top Announcement</Label>
+            <Input value={headerAnnouncement} onChange={(e) => setHeaderAnnouncement(e.target.value)} placeholder="Fast WhatsApp ordering across Pakistan" />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">Footer Message</Label>
+            <Textarea value={footerText} onChange={(e) => setFooterText(e.target.value)} placeholder="Thank you for shopping with us." rows={2} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Images className="w-5 h-5 text-primary" />
+            Store Slider
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Label>Enable Slider</Label>
+            <Switch checked={heroEnabled} onCheckedChange={setHeroEnabled} />
+          </div>
+          {heroEnabled && (
+            <div className="space-y-4 animate-fade-in">
+              {slides.map((slide, index) => (
+                <div key={index} className="space-y-3 rounded-lg border bg-background p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-muted-foreground">Slide {index + 1}</span>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeSlide(index)} disabled={slides.length === 1}>
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Title</Label>
+                      <Input value={slide.title} onChange={(e) => updateSlide(index, "title", e.target.value)} placeholder="Fresh deals for your family" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Button Text</Label>
+                      <Input value={slide.cta_text} onChange={(e) => updateSlide(index, "cta_text", e.target.value)} placeholder="Shop Now" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Subtitle</Label>
+                    <Input value={slide.subtitle} onChange={(e) => updateSlide(index, "subtitle", e.target.value)} placeholder="Order instantly on WhatsApp with fast delivery." />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Image URL</Label>
+                    <Input value={slide.image_url} onChange={(e) => updateSlide(index, "image_url", e.target.value)} placeholder="https://..." />
+                  </div>
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={addSlide}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Slide
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Star className="w-5 h-5 text-primary" />
+            Featured Products
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label>Show Featured Section</Label>
+            <Switch checked={featuredEnabled} onCheckedChange={setFeaturedEnabled} />
+          </div>
+          {featuredEnabled && (
+            <div className="grid gap-3 sm:grid-cols-2 animate-fade-in">
+              <div className="space-y-2">
+                <Label className="text-xs">Section Title</Label>
+                <Input value={featuredTitle} onChange={(e) => setFeaturedTitle(e.target.value)} placeholder="Featured Products" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Product Limit</Label>
+                <Input type="number" min="1" max="12" value={featuredLimit} onChange={(e) => setFeaturedLimit(e.target.value)} />
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
